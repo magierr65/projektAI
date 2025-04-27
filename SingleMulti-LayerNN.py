@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Load the dataset
-df = pd.read_csv(r'C:\Users\jakub\OneDrive\Pulpit\AGH\semestr4\Sztuczna inteligencja\projekt\daneAI\combined_data.csv')
+df = pd.read_csv(r'combined_data.csv')
 
 df['L(i)'] = df['total_load']
 # Power load at the three previous hours
