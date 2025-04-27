@@ -91,7 +91,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(X.shape[1],)), 
-    tf.keras.layers.Dense(25, activation='sigmoid'),
+    tf.keras.layers.Dense(125, activation='sigmoid'),
     tf.keras.layers.Dense(24, activation='linear')
 ])
 model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
