@@ -109,6 +109,12 @@ trained_model = model.fit(X_train, y_train, epochs=EpochsNo, batch_size=32, vali
 
 y_pred = model.predict(X_test)
 
+print()
+print()
+print(len(y_pred))
+print()
+print()
+
 mape_by_day = {}
 # Interation over the days of the week
 for day in range(7):
