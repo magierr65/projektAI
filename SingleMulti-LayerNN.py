@@ -4,7 +4,6 @@ import numpy as np
 
 # Load the dataset
 df = pd.read_csv(r'combined_data.csv')
-print(df.head())
 
 df['L(i)'] = df['total_load']
 # Power load at the three previous hours
@@ -44,16 +43,10 @@ df['hour'] = df['time'].dt.hour
 df['hour_sin'] = np.sin(df['hour'] * 2 * np.pi / 24)
 df['hour_cos'] = np.cos(df['hour'] * 2 * np.pi / 24)
 
-for i in [1, 2, 3, 22, 23, 24, 25, 26]:
-    df[f'L(i-{i})'] = df['total_load'].shift(i)
-    df[f'temp_t-{i}'] = df['temperature'].shift(i)
-
-df['mT(tree_hours)'] = (df[['temp_t-1', 'temp_t-2', 'temp_t-3']].fillna(method='ffill')).mean(axis=1)
-df['mT(previous_day)'] = (df[['temp_t-22', 'temp_t-23', 'temp_t-24','temp_t-25','temp_t-26',]].fillna(method='ffill')).mean(axis=1)
-
 for i in range(1,25):
     df[f'next_load_{i}'] = df['total_load'].shift(-i)
 
+# Fill missing values
 df.fillna(method='bfill', inplace=True)
 df.fillna(method='ffill', inplace=True)
 
@@ -108,12 +101,6 @@ model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01),
 trained_model = model.fit(X_train, y_train, epochs=EpochsNo, batch_size=32, validation_split=0.2)
 
 y_pred = model.predict(X_test)
-
-print()
-print()
-print(len(y_pred))
-print()
-print()
 
 mape_by_day = {}
 # Interation over the days of the week
