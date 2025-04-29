@@ -4,6 +4,10 @@ import numpy as np
 
 # Load the dataset
 df = pd.read_csv(r'combined_data.csv')
+print(df.head())
+
+
+
 
 df['L(i)'] = df['total_load']
 # Power load at the three previous hours
@@ -58,7 +62,8 @@ df.fillna(method='ffill', inplace=True)
 
 columns = ['L(i)', 'L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos', 'hour_sin', 'hour_cos']
 data = df[columns] 
-print(data.head())
+#print(data.head())
+
 
 # prediction model
 import tensorflow as tf
@@ -66,6 +71,9 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
+
+NeuronsNo = 25
+OutputNo = 24
 
 X = df[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos', 'hour_sin', 'hour_cos']]
 list = []
@@ -91,8 +99,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(X.shape[1],)), 
-    tf.keras.layers.Dense(25, activation='sigmoid'),
-    tf.keras.layers.Dense(24, activation='linear')
+    tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
+    tf.keras.layers.Dense(OutputNo, activation='linear')
 ])
 model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
 
