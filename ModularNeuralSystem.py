@@ -61,8 +61,9 @@ data = df[columns]
 
 hourvector = df[['hour_sin', 'hour_cos']]
 unique_hourvector = np.unique(hourvector, axis=0)
-print(unique_hourvector)
-#print(data.head())
+#print(unique_hourvector)
+print(data.tail())
+
 
 # prediction model
 import tensorflow as tf
@@ -93,10 +94,10 @@ for col in [f'L(i-{t})' for t in [1, 2, 3, 22, 23, 24, 25, 26]]:
 
 X = np.array(X)
 y = np.array(y)
-print(y)
-"""
+x_hour = np.array(df['hour'])
+
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test, hour_train, hour_test = train_test_split(X, y, x_hour, test_size=0.2)
 
 # model for every hour
 models = []
@@ -117,5 +118,3 @@ mape = mean_absolute_percentage_error(y_test, y_pred)
 MapePercent = mape * 100
 
 print(f'MAPE: {MapePercent:.2f}%')
-
-"""
