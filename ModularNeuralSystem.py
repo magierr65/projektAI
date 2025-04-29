@@ -67,6 +67,9 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
+NeuronsNo = 25
+OutputNo = 1
+
 X = df[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
 
 list = []
@@ -84,37 +87,24 @@ for temp in [f'mT(tree_hours)', f'mT(previous_day)']:
 for col in [f'L(i-{t})' for t in [1, 2, 3, 22, 23, 24, 25, 26]]:
     X[col] = other_scaler.fit_transform(X[[col]])
 
-def prediction_per_hour(hour):
-    # Select the columns for the input features and target variable 
-    X = np.array(data.loc[data['hour'] == hour])
-    y = np.array(y)
+X = np.array(X)
+y = np.array(y)
 
-    # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(X.shape[1],)), 
-        tf.keras.layers.Dense(25, activation='sigmoid'),
-        tf.keras.layers.Dense(1, activation='linear')
-    ])
-    model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
+model = tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(X.shape[1],)), 
+    tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
+    tf.keras.layers.Dense(OutputNo, activation='linear')
+])
+model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
 
-    trained_model = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2)
+trained_model = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2)
 
-    y_pred = model.predict(X_test)
+y_pred = model.predict(X_test)
 
-    mape = mean_absolute_percentage_error(y_test, y_pred)
-    print("Zakres y_test:", y_test.min(), y_test.max())
-    print("Zakres y_pred:", y_pred.min(), y_pred.max())
-    print(f"MAPE: {mape * 100:.2f}%")
+mape = mean_absolute_percentage_error(y_test, y_pred)
+MapePercent = mape * 100
 
-    plt.plot(y_test[1,:], label='Rzeczywiste')
-    plt.plot(y_pred[1,:], label='Przewidywane')
-    plt.xlabel('Godzina od pierwszej')
-    plt.ylabel('Wartości zapotrzebowania')
-    plt.legend()
-    plt.title("Porównanie rzeczywistych i przewidywanych wartości")
-    plt.show()
-
-
-prediction_per_hour(1)
+print(f'MAPE: {MapePercent:.2f}%')
