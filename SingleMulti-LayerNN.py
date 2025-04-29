@@ -6,9 +6,6 @@ import numpy as np
 df = pd.read_csv(r'combined_data.csv')
 print(df.head())
 
-
-
-
 df['L(i)'] = df['total_load']
 # Power load at the three previous hours
 df['L(i-1)'] = df['total_load'].shift(1)
@@ -62,18 +59,21 @@ df.fillna(method='ffill', inplace=True)
 
 columns = ['L(i)', 'L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos', 'hour_sin', 'hour_cos']
 data = df[columns] 
-#print(data.head())
 
+day_info = df['day of week'] # 0=Monday, 1=Tuesday, ..., 6=Sunday
+
+#print(data.head())
 
 # prediction model
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
+# global variables
 NeuronsNo = 25
 OutputNo = 24
+EpochsNo = 20
 
 X = df[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos', 'hour_sin', 'hour_cos']]
 list = []
@@ -93,9 +93,10 @@ for col in [f'L(i-{t})' for t in [1, 2, 3, 22, 23, 24, 25, 26]]:
 
 X = np.array(X)
 y = np.array(y)
+X_day = np.array(day_info)
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test, day_train, day_test = train_test_split(X, y, X_day, test_size=0.2)
 
 model = tf.keras.Sequential([
     tf.keras.layers.Input(shape=(X.shape[1],)), 
@@ -104,22 +105,44 @@ model = tf.keras.Sequential([
 ])
 model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
 
-trained_model = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2)
+trained_model = model.fit(X_train, y_train, epochs=EpochsNo, batch_size=32, validation_split=0.2)
 
 y_pred = model.predict(X_test)
 
-mape = mean_absolute_percentage_error(y_test, y_pred)
-print("Zakres y_test:", y_test.min(), y_test.max())
-print("Zakres y_pred:", y_pred.min(), y_pred.max())
-print(f"MAPE: {mape * 100:.2f}%")
+mape_by_day = {}
+# Interation over the days of the week
+for day in range(7):
+    indices = np.where(day_test == day)
+    y_true_day = y_test[indices]
+    y_pred_day = y_pred[indices]
+    
+    if len(y_true_day) > 0:
+        mape = mean_absolute_percentage_error(y_true_day, y_pred_day)
+        mape_by_day[day] = mape * 100 
+    else:
+        mape_by_day[day] = None
 
-plt.plot(y_test[1,:], label='Rzeczywiste')
-plt.plot(y_pred[1,:], label='Przewidywane')
-plt.xlabel('Godzina od pierwszej')
-plt.ylabel('Wartości zapotrzebowania')
-plt.legend()
-plt.title("Porównanie rzeczywistych i przewidywanych wartości")
-plt.show()
 
-print(y_pred)
-print(y_test)
+# Visualization of the mape for each day of the week
+week_days = {
+    0 : 'Monday', 
+    1 : 'Tuesday', 
+    2 : 'Wednesday',
+    3 : 'Thursday', 
+    4 : 'Friday',
+    5 : 'Saturday',
+    6 : 'Sunday'
+    }
+
+print()
+print(f"{NeuronsNo} neurons in the hidden layer")
+print(f"Epochs: {EpochsNo}")
+print()
+mape_sum = 0
+for day, mape in mape_by_day.items():
+    day_name = week_days.get(day, f"{day}")
+    mape_sum += mape
+    print(f"{day_name}: MAPE = {mape:.2f}%" if mape else f"Day {day}: No data")
+print()
+print(f"Average MAPE: {mape_sum/7:.2f}%")
+print()
