@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Load the dataset
-df = pd.read_csv(r'C:\Users\jakub\OneDrive\Pulpit\AGH\semestr4\Sztuczna inteligencja\projekt\daneAI\combined_data.csv')
+df = pd.read_csv(r'combined_data.csv')
 
 df['L(i)'] = df['total_load']
 # Power load at the three previous hours
@@ -40,8 +40,8 @@ df['yearday_cos'] = np.cos(df['day_of_year'] * 2 * np.pi / df['days_in_year'])
 
 # The hour for which the forecasting is done represented on unit vector
 df['hour'] = df['time'].dt.hour
-#df['hour_sin'] = np.sin(df['hour'] * 2 * np.pi / 24)
-#df['hour_cos'] = np.cos(df['hour'] * 2 * np.pi / 24)
+df['hour_sin'] = np.sin(df['hour'] * 2 * np.pi / 24)
+df['hour_cos'] = np.cos(df['hour'] * 2 * np.pi / 24)
 
 for i in [1, 2, 3, 22, 23, 24, 25, 26]:
     df[f'L(i-{i})'] = df['total_load'].shift(i)
@@ -56,10 +56,18 @@ for i in range(1,25):
 df.fillna(method='bfill', inplace=True)
 df.fillna(method='ffill', inplace=True)
 
-columns = ['L(i)', 'L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos', 'hour']
+columns = ['L(i)', 'L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']
 data = df[columns] 
+hourvector = df[['hour_sin', 'hour_cos']]
+unique_hourvector = np.unique(hourvector, axis=0)
+
+len = len(unique_hourvector)
+print(f'Unique hour vectors: {len}')
+print(unique_hourvector)
 #print(data.head())
 
+
+"""
 # prediction model
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
@@ -108,3 +116,4 @@ mape = mean_absolute_percentage_error(y_test, y_pred)
 MapePercent = mape * 100
 
 print(f'MAPE: {MapePercent:.2f}%')
+"""
