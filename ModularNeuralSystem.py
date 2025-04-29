@@ -43,16 +43,10 @@ df['hour'] = df['time'].dt.hour # 0-23
 df['hour_sin'] = np.sin(df['hour'] * 2 * np.pi / 24)
 df['hour_cos'] = np.cos(df['hour'] * 2 * np.pi / 24)
 
-for i in [1, 2, 3, 22, 23, 24, 25, 26]:
-    df[f'L(i-{i})'] = df['total_load'].shift(i)
-    df[f'temp_t-{i}'] = df['temperature'].shift(i)
-
-df['mT(tree_hours)'] = (df[['temp_t-1', 'temp_t-2', 'temp_t-3']].fillna(method='ffill')).mean(axis=1)
-df['mT(previous_day)'] = (df[['temp_t-22', 'temp_t-23', 'temp_t-24','temp_t-25','temp_t-26',]].fillna(method='ffill')).mean(axis=1)
-
 for i in range(1,25):
     df[f'next_load_{i}'] = df['total_load'].shift(-i)
 
+# Fill missing values
 df.fillna(method='bfill', inplace=True)
 df.fillna(method='ffill', inplace=True)
 
@@ -62,8 +56,7 @@ data = df[columns]
 hourvector = df[['hour_sin', 'hour_cos']]
 unique_hourvector = np.unique(hourvector, axis=0)
 #print(unique_hourvector)
-print(data.tail())
-
+print(data)
 
 # prediction model
 import tensorflow as tf
