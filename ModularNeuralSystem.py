@@ -39,7 +39,7 @@ df['yearday_sin'] = np.sin(df['day_of_year'] * 2 * np.pi / df['days_in_year'])
 df['yearday_cos'] = np.cos(df['day_of_year'] * 2 * np.pi / df['days_in_year'])
 
 # The hour for which the forecasting is done represented on unit vector
-df['hour'] = df['time'].dt.hour
+df['hour'] = df['time'].dt.hour # 0-23
 df['hour_sin'] = np.sin(df['hour'] * 2 * np.pi / 24)
 df['hour_cos'] = np.cos(df['hour'] * 2 * np.pi / 24)
 
@@ -58,28 +58,24 @@ df.fillna(method='ffill', inplace=True)
 
 columns = ['L(i)', 'L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']
 data = df[columns] 
+
 hourvector = df[['hour_sin', 'hour_cos']]
 unique_hourvector = np.unique(hourvector, axis=0)
-
-len = len(unique_hourvector)
-print(f'Unique hour vectors: {len}')
 print(unique_hourvector)
 #print(data.head())
 
-
-"""
 # prediction model
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
+# global variables
 NeuronsNo = 25
 OutputNo = 1
 
+# In/Output data
 X = df[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
-
 list = []
 for i in range(1,25):
     list.append(f'next_load_{i}')
@@ -97,18 +93,23 @@ for col in [f'L(i-{t})' for t in [1, 2, 3, 22, 23, 24, 25, 26]]:
 
 X = np.array(X)
 y = np.array(y)
-
+print(y)
+"""
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(X.shape[1],)), 
-    tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
-    tf.keras.layers.Dense(OutputNo, activation='linear')
-])
-model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
-
-trained_model = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2)
+# model for every hour
+models = []
+for hour in range(24):
+    model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=(X.shape[1],)), 
+        tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
+        tf.keras.layers.Dense(OutputNo, activation='linear')
+    ])
+    model.compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
+    
+    trained_model = model.fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2)
+    models.append(trained_model)
 
 y_pred = model.predict(X_test)
 
@@ -116,4 +117,5 @@ mape = mean_absolute_percentage_error(y_test, y_pred)
 MapePercent = mape * 100
 
 print(f'MAPE: {MapePercent:.2f}%')
+
 """
