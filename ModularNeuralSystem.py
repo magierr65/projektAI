@@ -91,27 +91,30 @@ models = {}
 Pi_vector = []
 mape_vector = []
 
-hour_train = data['hour'] == 0
+starting_hour = 0
+hour_train = ( data['hour'] == starting_hour )
 X_hour = X[hour_train]
 y_hour = y[hour_train]
 
-L_i_1 = X_hour[0][1]
-L_i_2 = X_hour[0][2]
-L_i_3 = X_hour[0][3]
+Li1 = 1
+Li2 = 2
+Li3 = 3
 
+L_i_1 = X_hour[starting_hour][Li1]
+L_i_2 = X_hour[starting_hour][Li2]
+L_i_3 = X_hour[starting_hour][Li3]
+temp = []
+y_t = []
 for hour in range(24):
-    
-    X_hour[hour][1] = L_i_1
-    X_hour[hour][2] = L_i_2
-    X_hour[hour][3] = L_i_3
+
+    X_hour[hour][Li1] = L_i_1
+    X_hour[hour][Li2] = L_i_2
+    X_hour[hour][Li3] = L_i_3
 
     # Filter the data for the current hour
-    hour_train = data['hour'] == hour
-    X_hour = X[hour_train]
-    y_hour = y[hour_train]
 
     X_train, X_test, y_train, y_test = train_test_split(X_hour, y_hour, test_size=0.2)
-
+    
     models[hour] = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(X.shape[1],)), 
         tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
@@ -120,6 +123,9 @@ for hour in range(24):
     models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
     models[hour].fit(X_hour, y_hour, epochs=20, batch_size=32, validation_split=0.2)
     y_pred = models[hour].predict(X_test)
+    
+    temp.append(y_pred)
+    y_t.append(y_test)
 
     Pi_vector.append(f"{y_pred[0][0]:.2f}")
     mape = mean_absolute_percentage_error(y_test, y_pred) 
@@ -134,9 +140,11 @@ for hour in range(24):
 
 print(Pi_vector)
 print(mape_vector)
+#print(temp)
 
 import matplotlib.pyplot as plt
 
-plt.plot(y_pred, y_test)
-
-
+    
+plt.plot(y_t[0], label='Real Load')
+plt.legend()
+plt.show()
