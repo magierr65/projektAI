@@ -94,11 +94,10 @@ mape_vector = []
 hour_train = data['hour'] == 0
 X_hour = X[hour_train]
 y_hour = y[hour_train]
-X_train, X_test, y_train, y_test = train_test_split(X_hour, y_hour, test_size=0.2)
 
-L_i_1 = X_test[0][1]
-L_i_2 = X_test[0][2]
-L_i_3 = X_test[0][3]
+L_i_1 = X_hour[0][1]
+L_i_2 = X_hour[0][2]
+L_i_3 = X_hour[0][3]
 
 for hour in range(24):
     
@@ -132,26 +131,12 @@ for hour in range(24):
     L_i_2 = L_i_1
     L_i_1 = float(f"{y_pred[0][0]:.2f}")
 
-    
 
-#for hour in range(21):
-
-    #X_hour.loc[:,'L(i-1)'] = L_i_1
-    #X_hour.loc[:,'L(i-2)'] = L_i_2
-    #X_hour.loc[:,'L(i-3)'] = L_i_3
-
-"""
-y_pred = models[hour].predict(X_test)
-    
-    Pi_vector.append(f"{y_pred[0][0]:.2f}")
-    
-    mape = mean_absolute_percentage_error(y_test, y_pred) 
-    MapePercent = mape * 100
-    mape_vector.append(f"{MapePercent:.2f}")
-    print(f'MAPE: {MapePercent:.2f}%')
-"""
 print(Pi_vector)
 print(mape_vector)
 
+import matplotlib.pyplot as plt
+
+plt.plot(y_pred, y_test)
 
 
