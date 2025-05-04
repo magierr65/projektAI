@@ -63,6 +63,7 @@ from sklearn.preprocessing import MinMaxScaler
 # global variables
 NeuronsNo = 25 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
+EpochsNo = 20 # number of epochs for training
 
 # In/Output data
 X = data[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
@@ -116,7 +117,7 @@ for hour in range(24):
     ])
 
     models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.001), metrics=['mape'])
-    models[hour].fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2, verbose=0)
+    models[hour].fit(X_train, y_train, epochs=EpochsNo, batch_size=32, validation_split=0.2, verbose=0)
     y_pred = models[hour].predict(X_test)
     
     Pi_vector.append(f"{y_pred[0][0]:.2f}")
@@ -128,6 +129,11 @@ for hour in range(24):
     L_i_3 = L_i_2
     L_i_2 = L_i_1
     L_i_1 = float(f"{y_pred[0][0]:.2f}")
+
+print()
+print(f"{NeuronsNo} neurons in the hidden layer")
+print(f"Epochs: {EpochsNo}")
+print()
 
 mape_sum = 0
 for i in range(len(Pi_vector)):
