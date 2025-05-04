@@ -61,7 +61,7 @@ from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
 # global variables
-NeuronsNo = 50 # number of neurons in the hidden layer
+NeuronsNo = 25 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
 
 # In/Output data
@@ -116,7 +116,7 @@ for hour in range(24):
     ])
 
     models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.001), metrics=['mape'])
-    models[hour].fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2, verbose=0)
+    models[hour].fit(X_train, y_train, epochs=20, batch_size=32, validation_split=0.2, verbose=0)
     y_pred = models[hour].predict(X_test)
     
     Pi_vector.append(f"{y_pred[0][0]:.2f}")
@@ -131,7 +131,7 @@ for hour in range(24):
 
 mape_sum = 0
 for i in range(len(Pi_vector)):
-    print(f"Load for {i+1} hour:", Pi_vector[i], "\tMAPE:", mape_vector[i],"%")
+    print(f"Load for hour number {i+1}:", Pi_vector[i], "\tMAPE:", mape_vector[i],"%")
     mape_sum += float(mape_vector[i])
 
 avg_mape = mape_sum / len(Pi_vector)
