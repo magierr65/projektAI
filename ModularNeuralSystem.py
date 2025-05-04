@@ -52,8 +52,7 @@ df.fillna(method='ffill', inplace=True)
 
 columns = ['hour', 'L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']
 data = df[columns] 
-print(data)
-
+#print(data)
 
 # prediction model
 import tensorflow as tf
@@ -62,11 +61,11 @@ from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
 # global variables
-NeuronsNo = 25
-OutputNo = 1
+NeuronsNo = 50 # number of neurons in the hidden layer
+OutputNo = 1 # number of neurons in the output layer
 
 # In/Output data
-X = df[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
+X = data[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
 y = df['next_load_1']
 
 # Normalization
@@ -81,52 +80,45 @@ for col in [f'L(i-{t})' for t in [1, 2, 3, 22, 23, 24, 25, 26]]:
 
 X = np.array(X)
 y = np.array(y)
-#print(y)
-x_hour = np.array(df['hour'])
-
-# Split the data into training and testing sets
+hours = df['hour'].values
 
 # model for every hour
 models = {}
 Pi_vector = []
 mape_vector = []
 
-starting_hour = 0
-hour_train = ( data['hour'] == starting_hour )
-X_hour = X[hour_train]
-y_hour = y[hour_train]
+# indexes of columns L(i-1), L(i-2), L(i-3)
+Li1 = 0
+Li2 = 1
+Li3 = 2
 
-Li1 = 1
-Li2 = 2
-Li3 = 3
+starting_hour = np.where(hours == 11)[0][0] # first hour in the dataset
+L_i_1 = X[starting_hour][Li1]
+L_i_2 = X[starting_hour][Li2]
+L_i_3 = X[starting_hour][Li3]
 
-L_i_1 = X_hour[starting_hour][Li1]
-L_i_2 = X_hour[starting_hour][Li2]
-L_i_3 = X_hour[starting_hour][Li3]
-temp = []
-y_t = []
 for hour in range(24):
+    
+    hour_filter = hours == hour
+    X_hour = X[hour_filter].copy()
+    y_hour = y[hour_filter]
 
     X_hour[hour][Li1] = L_i_1
     X_hour[hour][Li2] = L_i_2
     X_hour[hour][Li3] = L_i_3
 
-    # Filter the data for the current hour
-
     X_train, X_test, y_train, y_test = train_test_split(X_hour, y_hour, test_size=0.2)
-    
+
     models[hour] = tf.keras.Sequential([
         tf.keras.layers.Input(shape=(X.shape[1],)), 
         tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
         tf.keras.layers.Dense(OutputNo, activation='linear')
     ])
-    models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.01), metrics=['mape'])
-    models[hour].fit(X_hour, y_hour, epochs=20, batch_size=32, validation_split=0.2)
+
+    models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.001), metrics=['mape'])
+    models[hour].fit(X_train, y_train, epochs=100, batch_size=32, validation_split=0.2, verbose=0)
     y_pred = models[hour].predict(X_test)
     
-    temp.append(y_pred)
-    y_t.append(y_test)
-
     Pi_vector.append(f"{y_pred[0][0]:.2f}")
     mape = mean_absolute_percentage_error(y_test, y_pred) 
     MapePercent = mape * 100
@@ -137,14 +129,12 @@ for hour in range(24):
     L_i_2 = L_i_1
     L_i_1 = float(f"{y_pred[0][0]:.2f}")
 
+mape_sum = 0
+for i in range(len(Pi_vector)):
+    print(f"Load for {i+1} hour:", Pi_vector[i], "\tMAPE:", mape_vector[i],"%")
+    mape_sum += float(mape_vector[i])
 
-print(Pi_vector)
-print(mape_vector)
-#print(temp)
-
-import matplotlib.pyplot as plt
-
-    
-plt.plot(y_t[0], label='Real Load')
-plt.legend()
-plt.show()
+avg_mape = mape_sum / len(Pi_vector)
+print()
+print(f"Average MAPE: {avg_mape:.2f}%")
+print()
