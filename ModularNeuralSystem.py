@@ -61,9 +61,9 @@ from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
 # global variables
-NeuronsNo = 25 # number of neurons in the hidden layer
+NeuronsNo = 50 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
-EpochsNo = 100 # number of epochs for training
+EpochsNo = 20 # number of epochs for training
 
 # In/Output data
 X = data[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
@@ -93,7 +93,7 @@ Li1 = 0
 Li2 = 1
 Li3 = 2
 
-starting_hour = np.where(hours == 11)[0][0] # first hour in the dataset
+starting_hour = np.where(hours == 5)[0][0] # first hour in the dataset
 L_i_1 = X[starting_hour][Li1]
 L_i_2 = X[starting_hour][Li2]
 L_i_3 = X[starting_hour][Li3]
