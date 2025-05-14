@@ -61,9 +61,9 @@ from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.preprocessing import MinMaxScaler
 
 # global variables
-NeuronsNo = 25 # number of neurons in the hidden layer
+NeuronsNo = 50 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
-EpochsNo = 20 # number of epochs for training
+EpochsNo = 100 # number of epochs for training
 K = 5 # number od modules
 
 # In/Output data
@@ -153,4 +153,3 @@ avg_mape = mape_sum / len(Pi_vector)
 print()
 print(f"Average MAPE: {avg_mape:.2f}%")
 print()
-
