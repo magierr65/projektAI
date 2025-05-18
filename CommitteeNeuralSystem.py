@@ -65,6 +65,7 @@ NeuronsNo = 50 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
 EpochsNo = 100 # number of epochs for training
 K = 5 # number od modules
+START_HOUR = 14 # hour from which the prediction starts
 
 # In/Output data
 X = data[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
@@ -94,21 +95,25 @@ Li1 = 0
 Li2 = 1
 Li3 = 2
 
-starting_hour = np.where(hours == 11)[0][0] # first hour in the dataset
+starting_hour = np.where(hours == START_HOUR)[0][0] # first hour in the dataset
 L_i_1 = X[starting_hour][Li1]
 L_i_2 = X[starting_hour][Li2]
 L_i_3 = X[starting_hour][Li3]
 
 pred = {h: [] for h in range(24)}
 
-for hour in range(24):
+# iterating from starting hours
+ordered_hours = [(START_HOUR + i) % 24 for i in range(24)]
+
+for hour in ordered_hours:
     hour_filter = hours == hour
     X_hour = X[hour_filter].copy()
     y_hour = y[hour_filter]
 
-    X_hour[hour][Li1] = L_i_1
-    X_hour[hour][Li2] = L_i_2
-    X_hour[hour][Li3] = L_i_3
+    # (0) first row of data for a given hour
+    X_hour[0][Li1] = L_i_1
+    X_hour[0][Li2] = L_i_2
+    X_hour[0][Li3] = L_i_3
 
     X_train, X_test, y_train, y_test = train_test_split(X_hour, y_hour, test_size=0.2)
 
@@ -130,7 +135,7 @@ for hour in range(24):
     mape = mean_absolute_percentage_error(y_test, avg_pred)
     MapePercent = mape * 100
     mape_vector.append(f"{MapePercent:.2f}")
-    print(f'MAPE: {MapePercent:.2f}%')
+    print(f'HOUR: {hour} --- MAPE: {MapePercent:.2f}%')
 
     L_i_3 = L_i_2
     L_i_2 = L_i_1
@@ -146,7 +151,7 @@ print()
 
 mape_sum = 0
 for i in range(len(Pi_vector)):
-    print(f"Load for hour number {i+1}:", Pi_vector[i], "\tMAPE:", mape_vector[i],"%")
+    print(f"Load for hour number {(START_HOUR+i)%24}:", Pi_vector[i], "\tMAPE:", mape_vector[i],"%")
     mape_sum += float(mape_vector[i])
 
 avg_mape = mape_sum / len(Pi_vector)
