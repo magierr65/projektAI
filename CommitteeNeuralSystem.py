@@ -65,7 +65,7 @@ NeuronsNo = 50 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
 EpochsNo = 100 # number of epochs for training
 K = 5 # number od modules
-START_HOUR = 14 # hour from which the prediction starts
+START_HOUR = 15 # hour from which the prediction starts
 
 # In/Output data
 X = data[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
