@@ -81,7 +81,8 @@ y = df[list]
 =======
 NeuronsNo = 50 # number of neurons in the hidden layer
 OutputNo = 1 # number of neurons in the output layer
-EpochsNo = 20 # number of epochs for training
+EpochsNo = 100 # number of epochs for training
+K = 5 # number od modules
 
 # In/Output data
 X = data[['L(i-1)', 'L(i-2)', 'L(i-3)', 'L(i-22)', 'L(i-23)', 'L(i-24)', 'L(i-25)', 'L(i-26)', 'mT(tree_hours)', 'mT(previous_day)', 'weekday_sin', 'weekday_cos', 'yearday_sin', 'yearday_cos']]
@@ -127,14 +128,15 @@ Li1 = 0
 Li2 = 1
 Li3 = 2
 
-starting_hour = np.where(hours == 5)[0][0] # first hour in the dataset
+starting_hour = np.where(hours == 11)[0][0] # first hour in the dataset
 L_i_1 = X[starting_hour][Li1]
 L_i_2 = X[starting_hour][Li2]
 L_i_3 = X[starting_hour][Li3]
 >>>>>>> origin/Second:ModularNeuralSystem.py
 
+pred = {h: [] for h in range(24)}
+
 for hour in range(24):
-    
     hour_filter = hours == hour
     X_hour = X[hour_filter].copy()
     y_hour = y[hour_filter]
@@ -171,26 +173,35 @@ week_days = {
 
     X_train, X_test, y_train, y_test = train_test_split(X_hour, y_hour, test_size=0.2)
 
-    models[hour] = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(X.shape[1],)), 
-        tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
-        tf.keras.layers.Dense(OutputNo, activation='linear')
-    ])
+    for k in range(K):
+        models[hour] = tf.keras.Sequential([
+            tf.keras.layers.Input(shape=(X.shape[1],)), 
+            tf.keras.layers.Dense(NeuronsNo, activation='sigmoid'),
+            tf.keras.layers.Dense(OutputNo, activation='linear')
+            ])
 
-    models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.001), metrics=['mape'])
-    models[hour].fit(X_train, y_train, epochs=EpochsNo, batch_size=32, validation_split=0.2, verbose=0)
-    y_pred = models[hour].predict(X_test)
-    
-    Pi_vector.append(f"{y_pred[0][0]:.2f}")
-    mape = mean_absolute_percentage_error(y_test, y_pred) 
+        models[hour].compile(loss='mse', optimizer=tf.keras.optimizers.SGD(learning_rate=0.001), metrics=['mape'])
+        models[hour].fit(X_train, y_train, epochs=EpochsNo, batch_size=32, validation_split=0.2, verbose=0)
+        y_pred = models[hour].predict(X_test)
+        pred[hour].append(y_pred.flatten())
+        
+    avg_pred = np.full_like(y_test, fill_value=sum(pred[hour]) / K, dtype=np.float32) # dimension indentical to y_test
+    Pi_vector.append(avg_pred[0])
+
+    mape = mean_absolute_percentage_error(y_test, avg_pred)
     MapePercent = mape * 100
     mape_vector.append(f"{MapePercent:.2f}")
     print(f'MAPE: {MapePercent:.2f}%')
 
     L_i_3 = L_i_2
     L_i_2 = L_i_1
+<<<<<<< HEAD:ModularNeuralSystem.py
     L_i_1 = float(f"{y_pred[0][0]:.2f}")
 >>>>>>> origin/Second:ModularNeuralSystem.py
+=======
+    L_i_1 = float(avg_pred[0])
+        
+>>>>>>> origin/Third:CommitteeNeuralSystem.py
 
 print()
 print(f"{NeuronsNo} neurons in the hidden layer")
@@ -206,6 +217,7 @@ print()
 print(f"Average MAPE: {mape_sum/7:.2f}%")
 =======
 
+
 mape_sum = 0
 for i in range(len(Pi_vector)):
     print(f"Load for hour number {i+1}:", Pi_vector[i], "\tMAPE:", mape_vector[i],"%")
@@ -216,3 +228,4 @@ print()
 print(f"Average MAPE: {avg_mape:.2f}%")
 >>>>>>> origin/Second:ModularNeuralSystem.py
 print()
+
