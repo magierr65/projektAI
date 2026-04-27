@@ -1,5 +1,5 @@
 [project]
-name = "Zapotrzebowanie na energię elektryczną"
+name = "projektAI"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -9,4 +9,7 @@ dependencies = [
     "numpy>=2.4.4",
     "pandas>=3.0.2",
     "scikit-learn>=1.8.0",
+    "tensorflow>=2.8.0",
+    "holidays>=0.11.0"
 ]
+
